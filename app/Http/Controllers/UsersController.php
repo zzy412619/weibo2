@@ -8,6 +8,18 @@ use App\Models\User;
 
 class UsersController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth',[
+            // 下面这些方法不需要登录就能访问，其他的必须登录
+            'except' => ['show','create','store']
+        ]);
+        //只让未登录用户访问注册页面
+        $this->middleware('guest',[
+            'only' => ['create'];
+        ]);
+        
+    }
 	//注册
     public function create()
     {
@@ -50,6 +62,7 @@ class UsersController extends Controller
     //编辑用户
     public function edit(User $user)
     {
+        $this->authorize('update',$user);
         return view('users.edit', compact('user'));
     }
 
@@ -57,6 +70,7 @@ class UsersController extends Controller
     public function update(User $user, Request $request)
     {
         //先对用户提交的信息进行验证，最终调用 update 方法对用户对象进行更新。
+        $this->authorize('update', $user);
         $this->validate($request, [
             'name' => 'required|max:50',
             'password' => 'nullable|confirmed|min:6'
