@@ -21,8 +21,8 @@ class SessionsController extends Controller
     		'password' =>'required'
     	]);
 
-    	//验证用户
-    	if (Auth::attempt($credentials)) {
+    	//验证用户 Auth::attempt() 方法可接收两个参数，第一个参数为需要进行用户身份认证的数组，第二个参数为是否为用户开启『记住我』功能的布尔值。
+    	if (Auth::attempt($credentials,$request->has('remember'))) {
     		//登录成功后的相关操作
     		session()->flash('success', '欢迎回来！');
     		// 在 store 方法内使用了 Laravel 提供的 Auth::user() 方法来获取 当前登录用户 的信息，并将数据传送给路由。
