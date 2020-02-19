@@ -46,6 +46,33 @@ class UsersController extends Controller
         // 用户模型 User::create() 创建成功后会返回一个用户对象，并包含新注册用户的所有信息。我们将新注册用户的所有信息赋值给变量 $user，并通过路由跳转来进行数据绑定。
         return redirect()->route('users.show',[$user]);
     }
+
+    //编辑用户
+    public function edit(User $user)
+    {
+        return view('users.edit', compact('user'));
+    }
+
+    //修改用户
+    public function update(User $user, Request $request)
+    {
+        //先对用户提交的信息进行验证，最终调用 update 方法对用户对象进行更新。
+        $this->validate($request, [
+            'name' => 'required|max:50',
+            'password' => 'nullable|confirmed|min:6'
+        ]);
+
+        $data = [];
+        $data['name'] = $request->name;
+        if($request->password){
+            $data['password'] = bcrypt($request->password);
+        }
+        $user->update($data);
+
+        session()->flash('success','个人资料更新成功!');
+
+        return redirect()->route('users.show', $user->id);
+    }
     
     
     
