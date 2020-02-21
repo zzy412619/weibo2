@@ -43,3 +43,7 @@ Route::post('login', 'SessionsController@store')->name('login');
 //销毁会话(退出登录)
 Route::delete('logout', 'SessionsController@destroy')->name('logout');
 
+//用户的激活功能
+Route::get('signup/confirm/{token}', 'UsersController@confirmEmail')->name('confirm_email');
+
+

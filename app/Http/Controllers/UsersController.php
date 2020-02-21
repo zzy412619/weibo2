@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 //引入user模型
 use App\Models\User;
+use Mail;
+use Auth;
 
 class UsersController extends Controller
 {
@@ -12,7 +14,7 @@ class UsersController extends Controller
     {
         $this->middleware('auth',[
             // 下面这些方法不需要登录就能访问，其他的必须登录
-            'except' => ['show','create','store','index']
+            'except' => ['show','create','store','index','confirmEmail']
         ]);
         //只让未登录用户访问注册页面
         $this->middleware('guest',[
@@ -56,13 +58,16 @@ class UsersController extends Controller
             'password' => bcrypt($request->password),
             ]);
         //注册后自动登录
-        Auth::login($user);
+        // Auth::login($user);
+        // 激活邮箱的发送操作
+        $this->sendEmailConfirmationTo($user);
+        session()->flash('success','验证邮件已发送到你的邮箱上请注意查收！');
 
         // 我们可以使用 session() 方法来访问会话实例。而当我们想存入一条缓存的数据，让它只在下一次的请求内有效时，则可以使用 flash 方法。flash 方法接收两个参数，第一个为会话的键，第二个为会话的值，我们可以通过下面这行代码的为会话赋值。
 
-        session()->flash('success','欢迎，您将在这里开启一段新的旅程~');
+        // session()->flash('success','欢迎，您将在这里开启一段新的旅程~');
         // 用户模型 User::create() 创建成功后会返回一个用户对象，并包含新注册用户的所有信息。我们将新注册用户的所有信息赋值给变量 $user，并通过路由跳转来进行数据绑定。
-        return redirect()->route('users.show',[$user]);
+        return redirect('/');
     }
 
     //编辑用户
@@ -101,6 +106,34 @@ class UsersController extends Controller
         session()->flash('success','成功删除用户');
         // 返回到上一次进行删除的操作页面
         return back();
+    }
+    // 发送邮件给指定用户
+    protected function sendEmailConfirmationTo($user)
+    {
+        $view = 'emails.confirm';
+        $data = compact('user');
+        $from = '2504048243@qq.com';
+        $name = 'asd';
+        $to = $user->email;
+        $subject = "感谢注册 Weibo 应用！ 请确认你的邮箱。";
+
+        Mail::send($view,$data,function($message) use ($from,$name,$to,$subject){
+            $message->from($from,$name)->to($to)->subject($subject);
+        });
+    }
+
+    // 用户的激活操作
+    public function confirmEmail($token)
+    {
+        $user = User::where('activation_token',$token)->firstOrFail();
+
+        $user->activated = true;
+        $user->activation_token = null;
+        $user->save();
+        //注册后自动登录
+        Auth::login($user);
+        session()->flash('success','恭喜你，激活成功！');
+        return redirect()->route('users.show',[$user]);
     }
     
     
